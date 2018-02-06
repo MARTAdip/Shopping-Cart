@@ -1,4 +1,4 @@
-var database = {
+var database = {                  // array of objects
   "Pants": {
     price: 19.99,
     shipping: 4.99,
