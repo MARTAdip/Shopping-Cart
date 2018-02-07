@@ -4,6 +4,7 @@ class shoppingCart {
       this.db.total = this.db.total || 0;
       this.db.shipping = this.db.shipping || 0;
       this.db.time = this.db.time || 0;
+      this.db.discount = this.db.discount || 0;
       this.elements = {
         list: document.getElementById('products'),
         result: document.querySelectorAll('.cartresult'),
@@ -28,10 +29,28 @@ class shoppingCart {
         element.querySelector('.card-img-top').src = database[i].image
         element.querySelector('.card-title').prepend(i)
         //element.querySelector('.card-text').innerHTML = `${ database[i].content } `
+
+        var price = document.createElement('span');
+        price.innerHTML = ` ${database[i].price}€`;
+        element.querySelector('.card-body').appendChild(price);
+        
+        if (database[i].discount){
+            price.style.textDecoration='line-through';
+            price.classList.add('text-danger');
+            // discount
+            var discount = document.createElement('span');
+            discount.innerHTML = `${ database[i].discount }%`
+            element.querySelector('.card-body').appendChild(discount);
+        } 
+
+
         
         var footer = document.createElement('small');   // create a small element to display text -smaller- on the element
         footer.classList.add('text-muted');   // bootstrap class
-        footer.innerHTML = `shipping: ${database[i].shipping}&euro; <br> delivery: ${database[i].delivery}d`;
+        footer.innerHTML = `shipping: ${database[i].shipping}&euro; <br> delivery: ${database[i].delivery} days`;
+        
+
+
         element.querySelector('.card-footer').appendChild(footer);  // lets put in the footer the shipping costs and delivery time
   
         var button = element.querySelector('.btn-primary'); // now we take the  button and fill it with all our data to use this for the remove action
@@ -39,6 +58,7 @@ class shoppingCart {
         button.dataset.shipping = database[i].shipping;
         button.dataset.delivery = database[i].delivery;
         button.dataset.price = database[i].price;
+        button.dataset.discount = database[i].discount;
         this.elements.list.appendChild(element);
   
         // Fade-in effect
@@ -74,7 +94,8 @@ class shoppingCart {
         this.db.total = 0
         this.db.shipping = 0
         this.db.delivery = 0
-        localStorage.setItem("cart", JSON.stringify( {shipping: 0, total: 0, items: [], delivery: 0 } ))
+        this.db.discount = 0
+        localStorage.setItem("cart", JSON.stringify( {shipping: 0, total: 0, items: [], delivery: 0, discount: 0 } ))
         this.render()
       })
     }
@@ -99,7 +120,7 @@ class shoppingCart {
         if(itemKey !== undefined){
           this.db.items[itemKey].count++
         } else {
-          this.db.items.push({shipping: event.target.dataset.shipping, name: event.target.dataset.name, price: event.target.dataset.price, delivery: event.target.dataset.delivery, count: 1})
+          this.db.items.push({shipping: event.target.dataset.shipping, name: event.target.dataset.name, price: event.target.dataset.price, delivery: event.target.dataset.delivery, discount: event.target.dataset.discount, count: 1})
         }
       }
       if(this.db.items.length > 0) {
@@ -111,7 +132,18 @@ class shoppingCart {
           return i.shipping
         })
         this.db.shipping = Math.max(...this.db.shipping)
-  
+
+       
+        
+      
+        var productsArray = document.querySelectorAll('#products .card-footer button');
+       //console.log(productsArray[3].getAttribute('data-discount')) 
+       
+      /*  productsArray.forEach(function(product){
+         if( product.hasAttribute('data-discount'))  */
+          
+         
+   
         this.db.delivery = this.db.items.map((i) => {
           return i.delivery
         })
@@ -122,7 +154,7 @@ class shoppingCart {
         this.db.delivery = 0;
       }
   
-      localStorage.setItem("cart", JSON.stringify( {shipping: this.db.shipping, total: this.db.total, items: this.db.items, delivery: this.db.delivery } ))
+      localStorage.setItem("cart", JSON.stringify( {shipping: this.db.shipping, total: this.db.total, items: this.db.items, delivery: this.db.delivery, discount: this.db.discount } ))
       this.render()
     }
     render(){
@@ -140,15 +172,20 @@ class shoppingCart {
       }
       var cart = document.createElement('div')
       this.db.items.forEach( item => {
+         
+
+
         var element = document.createElement('li');
         element.classList += 'list-group-item d-flex justify-content-between align-items-center ';
-        element.innerHTML = `<span class="badge badge-info badge-pill mr-2">${item.count} </span>  ${ item.name } - ${item.price}&euro; <span class="ml-auto mr-3 font-weight-bold">${( item.price * item.count ).toFixed(2)}&euro;</span>`;
+        element.innerHTML = `<span class="badge badge-info badge-pill mr-2">${item.count} </span>  ${ item.name } - ${item.price}€ - ${item.discount}% <span class="ml-auto mr-3 font-weight-bold">${( item.price * item.count ).toFixed(2)}&euro; </span>`;
         var button = document.createElement('button');
         button.classList.add('btn', 'btn-sm', 'btn-danger');
         button.dataset.name = item.name
         button.innerHTML = "<i class='fa fa-close pointer-events-none'></i>";
         element.appendChild(button);
         cart.appendChild(element);
+        
+        
       })
 
       //TODO we want to show the list of totals several times on the page
@@ -161,6 +198,14 @@ class shoppingCart {
         ttemplate.querySelector(".total").innerHTML = this.db.total ? this.db.total.toFixed(2) : 0
         ttemplate.querySelector(".delivery").innerHTML = this.db.delivery ? this.db.delivery.toFixed(0) : 0
         ttemplate.querySelector(".shipping").innerHTML = this.db.shipping ? this.db.shipping.toFixed(0) : 0
+        ttemplate.querySelector(".totalplusship").innerHTML = (this.db.total + this.db.shipping).toFixed(2)
+       // ttemplate.querySelector(".discount").innerHTML = ((this.db.price * this.db.discount)/100 ).toFixed(0)
+        if (this.db.total){
+          var tTotal = this.db.total.toFixed(2)
+        } else {
+          var tTotal = 0;
+        }
+
         this.elements.totaltarget[i].innerHTML = ttemplate.innerHTML
       }
       for (let i = 0; i < this.elements.result.length; i++){
@@ -168,4 +213,8 @@ class shoppingCart {
       }
     }
   }
+
   var instaceOfCart = new shoppingCart();
+
+   
+
